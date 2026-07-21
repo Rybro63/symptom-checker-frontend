@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { signIn, signUp, confirmSignUp } from './auth'
 
+// Public demo account so recruiters can try the app without signing up.
+const DEMO_EMAIL = 'demo@symptomchecker.app'
+const DEMO_PASSWORD = 'DemoUser2026'
+
 // Modes: 'signin' | 'signup' | 'confirm'
 export default function Auth({ onSignedIn }) {
   const [mode, setMode] = useState('signin')
@@ -105,6 +109,16 @@ export default function Auth({ onSignedIn }) {
           <button className="link-btn" onClick={() => { setMode('signup'); setError(null) }}>
             No account? Create one
           </button>
+          <div className="demo-hint">
+            <span>Just exploring? Use the demo account:</span>
+            <button
+              type="button"
+              className="demo-fill"
+              onClick={() => { setEmail(DEMO_EMAIL); setPassword(DEMO_PASSWORD); setError(null) }}
+            >
+              {DEMO_EMAIL} · {DEMO_PASSWORD}
+            </button>
+          </div>
         </>
       )}
       {mode === 'signup' && (

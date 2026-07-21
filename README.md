@@ -4,6 +4,9 @@ A React + Vite single-page app for the [AI Symptom Checker API](https://dsfk8nnz
 
 > ⚠️ Educational only. Not a medical diagnosis.
 
+**Try it live:** https://symptom-checker-frontend-nine.vercel.app/
+Demo login — demo@symptomchecker.app / DemoUser2026
+
 ## Stack
 
 React 18 · Vite · plain CSS (no UI framework) · Fetch API
