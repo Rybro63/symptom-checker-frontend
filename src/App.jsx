@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { API_URL } from './config'
+import Auth from './Auth.jsx'
+import { getSession, getIdToken, signOut, currentUserEmail } from './auth'
 
 const TRIAGE = {
   emergency: { label: 'Emergency', tone: 'emergency', note: 'Seek immediate care — call 911.' },
@@ -81,7 +83,17 @@ function Result({ data }) {
   )
 }
 
+async function authedFetch(path, options = {}) {
+  const token = await getIdToken()
+  return fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: { ...(options.headers || {}), Authorization: `Bearer ${token}` },
+  })
+}
+
 export default function App() {
+  const [authed, setAuthed] = useState(null) // null = checking, false = signed out, true = in
+
   const [form, setForm] = useState({
     symptoms: '',
     age: '',
@@ -94,9 +106,13 @@ export default function App() {
   const [history, setHistory] = useState([])
   const [historyOpen, setHistoryOpen] = useState(false)
 
+  useEffect(() => {
+    getSession().then((s) => setAuthed(!!s))
+  }, [])
+
   const loadHistory = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/v1/checks?limit=10`)
+      const res = await authedFetch(`/v1/checks?limit=10`)
       if (!res.ok) return
       const data = await res.json()
       setHistory(data.items || [])
@@ -106,8 +122,8 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    loadHistory()
-  }, [loadHistory])
+    if (authed) loadHistory()
+  }, [authed, loadHistory])
 
   const update = (field) => (e) => setForm({ ...form, [field]: e.target.value })
 
@@ -132,7 +148,7 @@ export default function App() {
     setLoading(true)
     setResult(null)
     try {
-      const res = await fetch(`${API_URL}/v1/checks`, {
+      const res = await authedFetch(`/v1/checks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -160,6 +176,17 @@ export default function App() {
       <div className="bg-glow" />
 
       <header className="head">
+        {authed && (
+          <div className="session-bar">
+            <span className="session-email">{currentUserEmail()}</span>
+            <button
+              className="link-btn"
+              onClick={() => { signOut(); setAuthed(false); setResult(null); setHistory([]) }}
+            >
+              Sign out
+            </button>
+          </div>
+        )}
         <div className="eyebrow">AI · clinical triage · educational</div>
         <h1 className="title">Symptom <em>Checker</em></h1>
         <p className="subtitle">
@@ -169,6 +196,15 @@ export default function App() {
         </p>
       </header>
 
+      {authed === null && <div className="empty"><div className="spinner" /></div>}
+
+      {authed === false && (
+        <main className="grid grid--single">
+          <Auth onSignedIn={() => setAuthed(true)} />
+        </main>
+      )}
+
+      {authed && (
       <main className="grid">
         <section className="panel">
           <h2 className="panel-title">Your symptoms</h2>
@@ -265,6 +301,7 @@ export default function App() {
           {result && <Result data={result} />}
         </section>
       </main>
+      )}
 
       <footer className="foot">
         Built by Ryvath Mattey · FastAPI · Claude · AWS Lambda · DynamoDB ·{' '}

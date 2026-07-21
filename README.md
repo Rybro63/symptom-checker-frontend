@@ -17,6 +17,10 @@ React SPA  ──fetch──>  API Gateway ──> Lambda (FastAPI) ──> Clau
 
 The frontend talks only to the backend API — it never holds the Anthropic key. The triage call happens server-side in Lambda.
 
+## Auth setup (required)
+
+The app now requires sign-in (AWS Cognito). After deploying the backend, copy `UserPoolId` and `UserPoolClientId` from the SAM deploy **Outputs** into `src/config.js` (or set `VITE_USER_POOL_ID` / `VITE_USER_POOL_CLIENT_ID` at build time). Users sign up with email + password and confirm via a 6-digit emailed code.
+
 ## Run locally
 
 ```bash
